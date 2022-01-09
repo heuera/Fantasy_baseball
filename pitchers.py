@@ -59,15 +59,15 @@ def reg_points_to_df(vars):
 
 # Regression model with basic stats against points
 basic = reg_points_to_df(['W', "L", "ERA", "IP", "H", "TBF", 'ER', 'BB', "HR", 'SO', 'K/9', 'BB/9', 'K/BB', 'HR/9'])
-# print(basic)
+#print(basic)
 
 # Regression model with advanced stats against points
 adv = reg_points_to_df(['xFIP', "BABIP"])
-# print(adv)
+#print(adv)
 
 # Regression model with batted ball stats against points
 bb = reg_points_to_df(['Soft%', 'Med%', 'Barrel%', 'HardHit%'])
-print(bb)
+#print(bb)
 
 
 '''
