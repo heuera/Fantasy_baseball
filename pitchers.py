@@ -38,8 +38,18 @@ for head in cols:
 pitchers["points"] = (pitchers['IP'] * 3) + (pitchers['H'] * -1) + (pitchers['ER'] * -2) + (pitchers['BB'] * -1) + (
             pitchers['HBP'] * -1) + (pitchers['SO'] * 1) + (pitchers['W'] * 3) + (pitchers['L'] * -3)
 
+########################################################################################################################
+################################# EXPLORATORY ANALYSIS #################################################################
+########################################################################################################################
+
 # Summary stats for each column
 #print(pitchers.describe())
+
+# Function for getting mean, min, and max of one variable after grouping by another
+def group_mmm(gb_var, mmm_var):
+    val = pitchers.groupby(gb_var).agg({mmm_var: ['mean', 'min', 'max']})
+    return (val)
+#print(group_mmm("Team", "IP"))
 
 
 ########################################################################################################################
@@ -67,6 +77,12 @@ adv = reg_points_to_df(['xFIP', "BABIP"])
 # Regression model with batted ball stats against points
 bb = reg_points_to_df(['Soft%', 'Med%', 'Barrel%', 'HardHit%'])
 #print(bb)
+
+
+
+
+
+
 
 
 '''
