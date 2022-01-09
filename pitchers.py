@@ -29,11 +29,10 @@ pitchers_2 = pd.merge(pitchers_1, batted, on='playerid')
 pitchers = pd.merge(pitchers_2, statcast, on='playerid')
 
 # Strip % from variabes with %
-per_cols = (
-"K%", "BB%", "K-BB%", "LOB%", "LD%", "GB%", "FB%", "IFFB%", "HR/FB", "Pull%", "Cent%", "Oppo%", "Soft%", "Med%",
-"Hard%", "Barrel%", "HardHit%")
-for i in per_cols:
-    pitchers[i] = (pd.to_numeric(pitchers[i].str[:-1]).div(100).mask(pitchers[i] == '%', 0))
+cols = pitchers.columns
+for head in cols:
+    if "%" in head:
+        pitchers[head] = (pd.to_numeric(pitchers[head].str[:-1]).div(100).mask(pitchers[head] == '%', 0))
 
 # Generate a points column based on fantasy scoring (fangraphs doesn't record a quality starts)
 pitchers["points"] = (pitchers['IP'] * 3) + (pitchers['H'] * -1) + (pitchers['ER'] * -2) + (pitchers['BB'] * -1) + (
