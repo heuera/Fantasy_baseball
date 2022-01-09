@@ -26,7 +26,7 @@ pitchers["points"] = (pitchers['IP']*3) + (pitchers['H']*-1) + (pitchers['ER']*-
 
 # Summary stats for each column
 pd.set_option('display.max_columns', None)
-print(pitchers.describe())
+#print(pitchers.describe())
 
 # Regression model with basic stats against points
 reg = linear_model.LinearRegression()
