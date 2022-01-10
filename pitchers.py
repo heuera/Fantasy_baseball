@@ -22,6 +22,7 @@ statcast = statcast.drop(['Name', 'Team', 'IP', 'ERA'], axis=1)
 
 # Remove limit to number of columns pycharm displays
 pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
 
 # Merge datasets into a single dataframe
 pitchers_1 = pd.merge(standard, advanced, on='playerid')
@@ -53,6 +54,15 @@ def group_mmm(gb_var, mmm_var):
 
 
 ########################################################################################################################
+#################################### CORRELATION #################################################################
+########################################################################################################################
+
+cors = pitchers.corr().loc['points', ]
+print(cors.sort_values())
+
+
+
+########################################################################################################################
 #################################### REGRESSION MODELS #################################################################
 ########################################################################################################################
 
@@ -77,7 +87,6 @@ adv = reg_points_to_df(['xFIP', "BABIP"])
 # Regression model with batted ball stats against points
 bb = reg_points_to_df(['Soft%', 'Med%', 'Barrel%', 'HardHit%'])
 #print(bb)
-
 
 
 
