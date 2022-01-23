@@ -2,10 +2,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn import linear_model
+from scipy.stats import pearsonr
 
 # FOR OUTPUT FORMAT PYCHARM
 #pd.set_option('display.max_columns', None)
-pd.set_option('display.max_rows', None)
+#pd.set_option('display.max_rows', None)
 
 # DATA CLEANING --------------------------------------------------------------------------------------------------------
 
@@ -17,12 +19,12 @@ df_ptype = pd.read_csv("/Users/austinheuer/Desktop/Fantasy_baseball/data/Pitchty
 df_pvalue = pd.read_csv("/Users/austinheuer/Desktop/Fantasy_baseball/data/Pitchvalue.csv")
 
 # Merge the dataframes I'm interested in
-df_pitchers = pd.merge(df_standard, df_advanced, how='left', on=['playerid', 'Season'])
-df_pitchers = pd.merge(df_pitchers, df_batted, how='left', on=['playerid', 'Season'])
-df_pitchers = pd.merge(df_pitchers, df_ptype, how='left', on=['playerid', 'Season'])
-df_pitchers = pd.merge(df_pitchers, df_pvalue, how='left', on=['playerid', 'Season'])
-df_pitchers.drop(['Name_y', 'Team_y', 'ERA_y', 'BABIP_y', 'FB%_y', 'Name_x', 'Team_x'], axis=1, inplace=True)
-df_pitchers.rename(columns = {'ERA_x':'ERA', 'BABIP_x':'BABIP', 'FB%_x':'FB%'}, inplace = True)
+df_pitchers = pd.merge(df_standard, df_advanced, how='left', on=['playerid', 'Season'], suffixes=['_x', "_y"])
+df_pitchers = pd.merge(df_pitchers, df_batted, how='left', on=['playerid', 'Season'], suffixes=['_one', "_two"])
+df_pitchers = pd.merge(df_pitchers, df_ptype, how='left', on=['playerid', 'Season'], suffixes=['_a', "_b"])
+df_pitchers = pd.merge(df_pitchers, df_pvalue, how='left', on=['playerid', 'Season'], suffixes=['_c', "_d"])
+df_pitchers.drop(['Name_y', 'Team_y', 'ERA_y', 'Name_a', 'Team_a', 'BABIP_two', 'Name_b', 'Team_b', 'Name', 'Team'], axis=1, inplace=True)
+df_pitchers.rename(columns = {'Name_x':"Name", 'Team_x':'Team', 'ERA_x':'ERA', 'BABIP_one':'BABIP', 'FB%_b':'FastB%', 'FB%_a':"FlyB%"}, inplace = True)
 
 # Make a number of seasons variable
 df_pitchers['num_seasons'] = df_pitchers.sort_values('Season', ascending=True).groupby('playerid').cumcount()+1
@@ -50,6 +52,15 @@ for head in cols:
     if "%" in head:
         df_pitchers[head] = (pd.to_numeric(df_pitchers[head].str[:-1]).div(100).mask(df_pitchers[head] == '%', 0))
 
+# Because we want to use the previous year to predict performance, we need to drop all players who only played one year
+df_pitchers = df_pitchers.groupby('playerid').filter(lambda x: len(x) > 1)
+
+# Drop the last row within each group because it's the players last year and can't predict anything (and we already
+# have that year's points total stored in the previous row)
+last = df_pitchers.sort_values(['Season']).groupby(['playerid']).tail(1).index
+df_pitchers = df_pitchers.drop(last)
+df_pitchers = df_pitchers.set_index(['playerid', 'Season'])
+
 # EXPLORATORY ANALYSIS -------------------------------------------------------------------------------------------------
 '''
 # Look at the distributions
@@ -69,29 +80,40 @@ for var in vars:
     var = str(var)
     ax = sns.boxplot(x="Season", y=var, data=df_pitchers)
     #plt.show()
+'''
+# Create correlation matrix for variables
+corr_matrix = df_pitchers.corr()
+
+# Look specifically at correlation between points and number of points scored in the following year (points_lead)
+points_corr = df_pitchers['Points'].corr(df_pitchers['Points_lead'])
+#print(points_corr)
+
+# Is there evidence of correlation between how a player does in the current year and how they do in the following year?
+    # null: pearson r = 0 (ie. no correlation)
+pear_r = pearsonr(df_pitchers['Points'], df_pitchers['Points_lead'])
+    # Pearson r = 0.59 and p < 0.05, so current year performance does seem to be strongly associated with the following year performance
+
+# Visualize Points vs Points_lead
+sns.scatterplot(data=df_pitchers, x="Points", y='Points_lead', hue="Season", s=10)
+#plt.show()
+
 
 # WILL ADD TO EXPLORATORY ANALYSIS
-'''
+
 
 # PITCHER PERFORMANCE MODEL --------------------------------------------------------------------------------------------
-
-# Because we want to use the previous year to predict performance, we need to drop all players who only played one year
-df_pitchers = df_pitchers.groupby('playerid').filter(lambda x: len(x) > 1)
-
-# Drop the last row within each group because it's the players last year and can't predict anything (and we already
-# have that year's points total stored in the previous row)
-last = df_pitchers.sort_values(['Season']).groupby(['playerid']).tail(1).index
-df_pitchers = df_pitchers.drop(last)
-df_pitchers = df_pitchers.set_index(['playerid', 'Season'])
-
 # Will create new model(s) as I go through ML course I'm auditing at Hopkins
-
 
 # Multiple regression model
 
-# How many players are in the  dataset?
-df_numplayers = df_pitchers.groupby('playerid')
-# print(df_numplayers.ngroups)                         # printing this says 1056 players
+# How many individual player-seasons are in the  dataset?
+len(df_pitchers)                                                                                     # 4056 total player-years
 
-# still working on how to take a sub-sample of dataset after it's been grouped by player (want to make sure each
-# year for each selected player ends up in new dataframe)
+# Take a random sample from the dataframe
+df_sample = df_pitchers.sample(frac=0.5, replace=False, random_state=1)                              # gives a sample of 2028 player-years
+
+# Crude model (points_lead vs points)
+crude = linear_model.LinearRegression().fit(df_sample[['Points']], df_sample[['Points_lead']])       # y = 0.64x + 57.47
+#print(crude.coef_, crude.intercept_)
+
+
