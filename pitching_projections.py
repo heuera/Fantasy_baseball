@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # FOR OUTPUT FORMAT PYCHARM
-# pd.set_option('display.max_columns', None)
-# pd.set_option('display.max_rows', None)
+#pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
 
 # DATA CLEANING --------------------------------------------------------------------------------------------------------
 
@@ -26,6 +26,7 @@ df_pitchers.rename(columns = {'ERA_x':'ERA', 'BABIP_x':'BABIP', 'FB%_x':'FB%'}, 
 
 # Make a number of seasons variable
 df_pitchers['num_seasons'] = df_pitchers.sort_values('Season', ascending=True).groupby('playerid').cumcount()+1
+df_pitchers['num_seasons'] = df_pitchers['num_seasons'].astype(int)
 
 # Point column doesn't include quality starts because FanGraphs doesn't provide them
 df_pitchers["Points"] = (df_pitchers['IP'] * 3) + (df_pitchers['H'] * -1) + (df_pitchers['ER'] * -2) + \
@@ -50,7 +51,7 @@ for head in cols:
         df_pitchers[head] = (pd.to_numeric(df_pitchers[head].str[:-1]).div(100).mask(df_pitchers[head] == '%', 0))
 
 # EXPLORATORY ANALYSIS -------------------------------------------------------------------------------------------------
-
+'''
 # Look at the distributions
 vars = ['ERA', 'CG', 'IP', 'TBF', 'H', 'R', 'ER', 'HR', 'BB', 'K/9', 'BB/9', 'K/BB', 'HR/9', 'FBv', 'SIERA', 'WHIP']
 for var in vars:
@@ -70,8 +71,27 @@ for var in vars:
     #plt.show()
 
 # WILL ADD TO EXPLORATORY ANALYSIS
-
+'''
 
 # PITCHER PERFORMANCE MODEL --------------------------------------------------------------------------------------------
 
+# Because we want to use the previous year to predict performance, we need to drop all players who only played one year
+df_pitchers = df_pitchers.groupby('playerid').filter(lambda x: len(x) > 1)
 
+# Drop the last row within each group because it's the players last year and can't predict anything (and we already
+# have that year's points total stored in the previous row)
+last = df_pitchers.sort_values(['Season']).groupby(['playerid']).tail(1).index
+df_pitchers = df_pitchers.drop(last)
+df_pitchers = df_pitchers.set_index(['playerid', 'Season'])
+
+# Will create new model(s) as I go through ML course I'm auditing at Hopkins
+
+
+# Multiple regression model
+
+# How many players are in the  dataset?
+df_numplayers = df_pitchers.groupby('playerid')
+# print(df_numplayers.ngroups)                         # printing this says 1056 players
+
+# still working on how to take a sub-sample of dataset after it's been grouped by player (want to make sure each
+# year for each selected player ends up in new dataframe)
