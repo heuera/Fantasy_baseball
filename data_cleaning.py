@@ -51,6 +51,7 @@ cols = df_pitchers.columns
 for head in cols:
     if "%" in head:
         df_pitchers[head] = (pd.to_numeric(df_pitchers[head].str[:-1]).div(100).mask(df_pitchers[head] == '%', 0))
+df_pitchers['HR/FB'] = (pd.to_numeric(df_pitchers['HR/FB'].str[:-1]).div(100).mask(df_pitchers['HR/FB'] == '%', 0))
 
 # Because we want to use the previous year to predict performance, we need to drop all players who only played one year
 df_pitchers = df_pitchers.groupby('playerid').filter(lambda x: len(x) > 1)
