@@ -5,7 +5,8 @@ import seaborn as sns
 from sklearn import linear_model
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import mean_squared_error
+from math import sqrt
 from scipy.stats import pearsonr
 
 # FOR OUTPUT FORMAT PYCHARM
@@ -62,35 +63,40 @@ df_keystats = df_pitchers.drop(['Name', 'Team', 'G', 'GS', 'CG', 'ShO', 'SV', 'H
 #sns.pairplot(df_keystats, hue='Points_lead', size=1.5)
 #plt.show()
 
-
 # WILL ADD TO EXPLORATORY ANALYSIS
 
 
 # PITCHER PERFORMANCE MODEL --------------------------------------------------------------------------------------------
 # Will create new model(s) as I go through ML course I'm auditing at Hopkins
 
-# Multiple regression model
+# Regression model
 # How many individual player-seasons are in the  dataset?
 len(df_pitchers)                                                                                     # 4056 total player-years
 
-'''
-# Take a random sample from the dataframe
-df_sample = df_pitchers.sample(frac=0.5, replace=False, random_state=1)                              # gives a sample of 2028 player-years
-
-# Crude model (points_lead vs points)
-crude = linear_model.LinearRegression().fit(df_sample[['Points']], df_sample[['Points_lead']])       # y = 0.64x + 57.47
-#print(crude.coef_, crude.intercept_)
-'''
 # Using train_test_split
+# Drop missing values
 df_keystats = df_keystats.dropna()
-df_keystats.set_index(['playerid', 'Season'], inplace=True)
-#X = df_keystats[df_keystats.columns[:-1]]
-X = df_keystats[['FIP', 'W']]
-y = df_keystats['Points_lead'].astype('int')
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, train_size=0.5, random_state=1)
 
+# Set index
+df_keystats.set_index(['playerid', 'Season'], inplace=True)
+
+# X is independent variables
+X = df_keystats[df_keystats.columns[:-1]]
+
+# y is the target (points_lead)
+y = df_keystats['Points_lead'].astype('int')
+
+# Splits the data (80% to train & 20% to test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, train_size=0.8, random_state=1)
+
+# Fit the model
 model = GaussianNB()
 model.fit(X_train, y_train)
 y_model = model.predict(X_test)
-print(accuracy_score(y_test, y_model))
+print(sqrt(mean_squared_error(y_test, y_model)))
+
+
+
+
+
 
