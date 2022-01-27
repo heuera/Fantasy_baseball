@@ -2,15 +2,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn import linear_model
-from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import mean_squared_error
-from math import sqrt
-from scipy.stats import pearsonr
 
 # FOR OUTPUT FORMAT PYCHARM
-pd.set_option('display.max_columns', None)
+#pd.set_option('display.max_columns', None)
 #pd.set_option('display.max_rows', None)
 
 # EXPLORATORY ANALYSIS -------------------------------------------------------------------------------------------------
@@ -67,15 +61,11 @@ df_keystats = df_pitchers.drop(['Name', 'Team', 'G', 'GS', 'CG', 'ShO', 'SV', 'H
 
 
 # PITCHER PERFORMANCE MODEL --------------------------------------------------------------------------------------------
-# Will create new model(s) as I go through ML course I'm auditing at Hopkins
+# Will create new models as I go through ML course I'm auditing at Hopkins
 
-# Regression model
-# How many individual player-seasons are in the  dataset?
-len(df_pitchers)                                                                                     # 4056 total player-years
-
-# Using train_test_split
 # Drop missing values
 df_keystats = df_keystats.dropna()
+#print(len(df_keystats))                          # 3561 complete records in df
 
 # Set index
 df_keystats.set_index(['playerid', 'Season'], inplace=True)
@@ -86,14 +76,29 @@ X = df_keystats[df_keystats.columns[:-1]]
 # y is the target (points_lead)
 y = df_keystats['Points_lead'].astype('int')
 
-# Splits the data (80% to train & 20% to test)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, train_size=0.8, random_state=1)
+# Load packages
+from sklearn.model_selection import KFold
+from sklearn.model_selection import cross_val_score
+from sklearn.linear_model import LinearRegression
+from numpy import mean
+from numpy import absolute
+from numpy import sqrt
 
-# Fit the model
-model = GaussianNB()
-model.fit(X_train, y_train)
-y_model = model.predict(X_test)
-print(sqrt(mean_squared_error(y_test, y_model)))
+# Linear regression model with cross validation resampling
+# Set number folds
+cv = KFold(n_splits=5, random_state=1, shuffle=True)
+
+# Build multiple linear regression model
+model = LinearRegression()
+
+# Use CV and evaluate model
+scores = cross_val_score(model, X, y, scoring='neg_mean_squared_error', cv=cv)
+
+# RMSE
+print(sqrt(mean(absolute(scores))))              # 98.81 so not very good. Need to use a more flexible model
+
+
+
 
 
 
