@@ -113,7 +113,7 @@ KNNmodel = KNeighborsRegressor(n_neighbors=10)
 KNNscores = cross_val_score(KNNmodel, X, y, scoring='neg_mean_squared_error', cv=KNNcv)
 
 # RMSE of KNN model
-print(sqrt(mean(absolute(KNNscores))))           # 111.75 curse of dem.
+print(sqrt(mean(absolute(KNNscores))))           # 111.75 curse of dim.
 
 
-
+# To do: consider data transformation (partic. for skewed variables) and dim. reduction techniques
